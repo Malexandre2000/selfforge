@@ -1,0 +1,19 @@
+# dependencies
+node_modules/
+
+# turborepo
+.turbo/
+
+# env files
+.env
+.env.local
+.env.*.local
+
+# vercel
+.vercel
+
+# macOS
+.DS_Store
+
+# logs
+npm-debug.log*

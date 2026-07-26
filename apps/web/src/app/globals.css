@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+/*
+ * Color/type/radius values mirror packages/design-tokens/src/index.ts —
+ * kept in sync by hand since Tailwind v4's CSS-first config needs real
+ * CSS custom properties (not a JS object), unlike the RN/NativeWind side.
+ */
+@theme {
+  --color-white: #ffffff;
+  --color-black: #0a0908;
+
+  --color-ink-50: #fafaf9;
+  --color-ink-100: #f4f3f1;
+  --color-ink-200: #e7e5e2;
+  --color-ink-300: #d3d0cb;
+  --color-ink-400: #a8a29a;
+  --color-ink-500: #78746c;
+  --color-ink-600: #57534a;
+  --color-ink-700: #403d37;
+  --color-ink-800: #292724;
+  --color-ink-900: #171614;
+  --color-ink-950: #0a0908;
+
+  --color-success: #1f7a4d;
+  --color-error: #b3261e;
+
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-fraunces);
+
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+
+  --shadow-card: 0 1px 2px rgba(10, 9, 8, 0.04), 0 8px 24px rgba(10, 9, 8, 0.06);
+  --shadow-raised: 0 2px 4px rgba(10, 9, 8, 0.06), 0 16px 40px rgba(10, 9, 8, 0.1);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+::selection {
+  background: var(--color-ink-950);
+  color: var(--color-white);
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+/*
+ * Plain-CSS step transition for the onboarding wizard. Framer Motion's
+ * AnimatePresence does not reliably swap children on this React
+ * 19 / Next 16 / framer-motion 12 combination (confirmed: step state
+ * advances correctly but the AnimatePresence-wrapped subtree never
+ * re-renders), so step transitions use this + a `key` remount instead.
+ */
+@keyframes step-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-step-in {
+  animation: step-in 0.35s var(--ease-out-expo);
+}
