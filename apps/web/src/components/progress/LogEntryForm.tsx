@@ -17,7 +17,7 @@ function FieldInput({
   return (
     <label className="flex flex-col gap-1.5">
       <span className="text-xs font-medium uppercase tracking-[0.1em] text-ink-400">{label}</span>
-      <div className="flex items-center gap-2 rounded-lg border border-ink-200 bg-white px-3 py-2">
+      <div className="flex items-center gap-2 rounded-lg border border-ink-200 bg-white px-3 py-2 focus-within:border-ink-950">
         <input
           type="number"
           inputMode="decimal"

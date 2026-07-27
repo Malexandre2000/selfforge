@@ -5,12 +5,21 @@ import { trpc } from "@/lib/trpc";
 import { StatCards } from "./StatCards";
 import { Timeline } from "./Timeline";
 import { BeforeAfterGallery } from "./BeforeAfterGallery";
+import { QueryError } from "@/components/app/QueryError";
 
 export function DashboardStats() {
-  const { data, isLoading } = trpc.dashboard.get.useQuery();
+  const { data, isLoading, isError, refetch } = trpc.dashboard.get.useQuery();
 
-  if (isLoading || !data) {
+  if (isLoading) {
     return <p className="mt-10 text-ink-500">Loading your roadmap…</p>;
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="mt-10">
+        <QueryError message="Couldn't load your dashboard." onRetry={() => refetch()} />
+      </div>
+    );
   }
 
   if (data.needsOnboarding) {

@@ -9,6 +9,7 @@ import {
   timestamp,
   uuid,
   unique,
+  index,
 } from "drizzle-orm/pg-core";
 import {
   GENDER_OPTIONS,
@@ -98,15 +99,19 @@ export const missionCompletions = pgTable(
   (t) => [unique().on(t.userId, t.date, t.category)],
 );
 
-export const habits = pgTable("habits", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  title: text("title").notNull(),
-  active: boolean("active").notNull().default(true),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const habits = pgTable(
+  "habits",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [index("habits_user_id_idx").on(t.userId)],
+);
 
 export const habitEntries = pgTable(
   "habit_entries",
@@ -140,15 +145,19 @@ export const progressEntries = pgTable(
   (t) => [unique().on(t.userId, t.date)],
 );
 
-export const chatMessages = pgTable("chat_messages", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  role: text("role", { enum: ["user", "assistant"] }).notNull(),
-  content: text("content").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const chatMessages = pgTable(
+  "chat_messages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    role: text("role", { enum: ["user", "assistant"] }).notNull(),
+    content: text("content").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [index("chat_messages_user_id_created_at_idx").on(t.userId, t.createdAt)],
+);
 
 export const subscriptionStatusEnum = pgEnum("subscription_status", [
   "trialing",

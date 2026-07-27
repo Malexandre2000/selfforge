@@ -3,21 +3,35 @@
 import { currentStreak } from "@selfforge/types";
 import { trpc } from "@/lib/trpc";
 import { HabitCard } from "./HabitCard";
+import { QueryError } from "@/components/app/QueryError";
 
 export function HabitsList() {
   const utils = trpc.useUtils();
-  const { data: habits, isLoading } = trpc.habits.list.useQuery();
+  const { data: habits, isLoading, isError, refetch } = trpc.habits.list.useQuery();
   const toggle = trpc.habits.toggleToday.useMutation({
     onSuccess: () => utils.habits.list.invalidate(),
   });
 
-  if (isLoading || !habits) {
+  if (isLoading) {
     return (
       <div className="mx-auto max-w-2xl px-5 py-10 sm:px-8 sm:py-12">
         <h1 className="font-display text-3xl tracking-tight text-ink-950 sm:text-4xl">
           Your Habits
         </h1>
         <p className="mt-4 text-ink-500">Loading your habits…</p>
+      </div>
+    );
+  }
+
+  if (isError || !habits) {
+    return (
+      <div className="mx-auto max-w-2xl px-5 py-10 sm:px-8 sm:py-12">
+        <h1 className="font-display text-3xl tracking-tight text-ink-950 sm:text-4xl">
+          Your Habits
+        </h1>
+        <div className="mt-6">
+          <QueryError message="Couldn't load your habits." onRetry={() => refetch()} />
+        </div>
       </div>
     );
   }

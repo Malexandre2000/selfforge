@@ -17,10 +17,25 @@ const fraunces = Fraunces({
   display: "swap",
 });
 
+const title = "SelfForge — Become the most confident version of yourself";
+const description =
+  "Your AI self-improvement mentor for fitness, nutrition, skincare, style, and discipline. One roadmap. Every day.";
+
 export const metadata: Metadata = {
-  title: "SelfForge — Become the most confident version of yourself",
-  description:
-    "Your AI self-improvement mentor for fitness, nutrition, skincare, style, and discipline. One roadmap. Every day.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  title,
+  description,
+  openGraph: {
+    title,
+    description,
+    type: "website",
+    siteName: "SelfForge",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
 };
 
 export default function RootLayout({

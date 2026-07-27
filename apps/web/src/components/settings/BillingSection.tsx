@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
+import { QueryError } from "@/components/app/QueryError";
 
 const STATUS_LABELS: Record<string, string> = {
   trialing: "Free trial",
@@ -16,7 +17,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export function BillingSection() {
-  const { data, isLoading } = trpc.billing.getStatus.useQuery();
+  const { data, isLoading, isError, refetch } = trpc.billing.getStatus.useQuery();
   const createPortal = trpc.billing.createPortalSession.useMutation({
     onSuccess: (res) => {
       window.location.href = res.url;
@@ -29,6 +30,10 @@ export function BillingSection() {
 
       {isLoading ? (
         <p className="mt-3 text-sm text-ink-500">Loading…</p>
+      ) : isError ? (
+        <div className="mt-3">
+          <QueryError message="Couldn't load your billing status." onRetry={() => refetch()} />
+        </div>
       ) : data?.status === "none" ? (
         <>
           <p className="mt-2 text-sm text-ink-500">You don&apos;t have an active subscription.</p>

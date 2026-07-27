@@ -4,6 +4,7 @@ import Link from "next/link";
 import { missionCategoryLabels } from "@selfforge/types";
 import { trpc } from "@/lib/trpc";
 import { MissionCard } from "./MissionCard";
+import { QueryError } from "@/components/app/QueryError";
 
 const today = new Date().toLocaleDateString("en-US", {
   weekday: "long",
@@ -13,7 +14,7 @@ const today = new Date().toLocaleDateString("en-US", {
 
 export function MissionsList() {
   const utils = trpc.useUtils();
-  const { data, isLoading } = trpc.missions.getToday.useQuery();
+  const { data, isLoading, isError, refetch } = trpc.missions.getToday.useQuery();
   const toggle = trpc.missions.toggle.useMutation({
     onSuccess: () => {
       utils.missions.getToday.invalidate();
@@ -34,6 +35,22 @@ export function MissionsList() {
           Today&apos;s Missions
         </h1>
         <p className="mt-4 text-ink-500">Building your personalized plan…</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="mx-auto max-w-2xl px-5 py-10 sm:px-8 sm:py-12">
+        <h1 className="font-display text-3xl tracking-tight text-ink-950 sm:text-4xl">
+          Today&apos;s Missions
+        </h1>
+        <div className="mt-6">
+          <QueryError
+            message="Couldn't load today's missions."
+            onRetry={() => refetch()}
+          />
+        </div>
       </div>
     );
   }

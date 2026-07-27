@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Send } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { QueryError } from "@/components/app/QueryError";
 
 type Message = { id: string; role: "user" | "assistant"; content: string };
 
@@ -23,17 +24,21 @@ function Bubble({ role, content }: { role: "user" | "assistant"; content: string
 }
 
 export function AICoachChat() {
-  const { data: profile, isLoading: profileLoading } = trpc.onboarding.get.useQuery();
+  const { data: profile, isLoading: profileLoading, isError: profileError, refetch: refetchProfile } =
+    trpc.onboarding.get.useQuery();
   const utils = trpc.useUtils();
-  const { data: history, isLoading: historyLoading } = trpc.aiCoach.getMessages.useQuery(
-    undefined,
-    { enabled: !!profile },
-  );
+  const {
+    data: history,
+    isLoading: historyLoading,
+    isError: historyError,
+    refetch: refetchHistory,
+  } = trpc.aiCoach.getMessages.useQuery(undefined, { enabled: !!profile });
 
   const [pending, setPending] = useState<Message[]>([]);
   const [streamingText, setStreamingText] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [input, setInput] = useState("");
+  const [sendError, setSendError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const allMessages: Message[] = [
@@ -50,6 +55,7 @@ export function AICoachChat() {
     const content = input.trim();
     if (!content || isStreaming) return;
     setInput("");
+    setSendError(null);
     setPending((p) => [...p, { id: `pending-${Date.now()}`, role: "user", content }]);
     setIsStreaming(true);
     setStreamingText("");
@@ -60,7 +66,10 @@ export function AICoachChat() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content }),
       });
-      if (!res.ok || !res.body) throw new Error("Chat request failed");
+      if (res.status === 429) {
+        throw new Error("You've hit the hourly message limit. Please try again in a bit.");
+      }
+      if (!res.ok || !res.body) throw new Error("That message didn't send. Please try again.");
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -71,6 +80,8 @@ export function AICoachChat() {
         text += decoder.decode(value, { stream: true });
         setStreamingText(text);
       }
+    } catch (err) {
+      setSendError(err instanceof Error ? err.message : "That message didn't send. Please try again.");
     } finally {
       setIsStreaming(false);
       setStreamingText("");
@@ -81,6 +92,14 @@ export function AICoachChat() {
 
   if (profileLoading) {
     return <p className="mx-auto max-w-2xl px-5 py-10 text-ink-500 sm:px-8">Loading…</p>;
+  }
+
+  if (profileError) {
+    return (
+      <div className="mx-auto max-w-2xl px-5 py-10 sm:px-8 sm:py-12">
+        <QueryError message="Couldn't load your coach." onRetry={() => refetchProfile()} />
+      </div>
+    );
   }
 
   if (!profile) {
@@ -112,6 +131,8 @@ export function AICoachChat() {
       <div className="mt-6 flex-1 space-y-4 overflow-y-auto">
         {historyLoading ? (
           <p className="text-ink-500">Loading your conversation…</p>
+        ) : historyError ? (
+          <QueryError message="Couldn't load your conversation." onRetry={() => refetchHistory()} />
         ) : allMessages.length === 0 ? (
           <div className="rounded-lg border border-dashed border-ink-300 bg-white p-6 text-center text-ink-500">
             Say hello to start your first conversation.
@@ -129,6 +150,8 @@ export function AICoachChat() {
         <div ref={scrollRef} />
       </div>
 
+      {sendError && <p className="mt-2 text-sm text-red-600">{sendError}</p>}
+
       <div className="mt-4 flex items-end gap-3 border-t border-ink-200 pt-4">
         <textarea
           value={input}
@@ -141,7 +164,7 @@ export function AICoachChat() {
           }}
           placeholder="Ask your coach anything…"
           rows={1}
-          className="h-12 flex-1 resize-none rounded-lg border border-ink-200 px-4 py-3 text-sm text-ink-950 outline-none placeholder:text-ink-400"
+          className="h-12 flex-1 resize-none rounded-lg border border-ink-200 px-4 py-3 text-sm text-ink-950 outline-none placeholder:text-ink-400 focus:border-ink-950"
         />
         <button
           onClick={send}

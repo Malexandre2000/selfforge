@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, gt } from "drizzle-orm";
+import { count } from "drizzle-orm/sql";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { onboardingProfileSchema } from "@selfforge/types";
@@ -9,6 +10,12 @@ import { describeProfile } from "@/server/ai/generateDailyPlan";
 import { hasActiveAccess } from "@/server/billing/access";
 
 const anthropic = new Anthropic();
+
+// A hard cap on Claude calls per user, independent of subscription status —
+// without this, one trialing account (free until day 7, no card charged yet)
+// could run unbounded Opus calls at our expense. Broad abuse/IP-level
+// protection is a separate, later concern; this just stops runaway cost.
+const MESSAGES_PER_HOUR_LIMIT = 30;
 
 const GENERIC_SYSTEM_PROMPT =
   "You are SelfForge's AI self-improvement coach — a warm, direct, no-nonsense " +
@@ -31,6 +38,24 @@ export async function POST(req: Request) {
 
   if (!(await hasActiveAccess(db, userId))) {
     return new Response("Subscribe to unlock the AI coach.", { status: 403 });
+  }
+
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+  const [{ n: recentMessageCount }] = await db
+    .select({ n: count() })
+    .from(chatMessages)
+    .where(
+      and(
+        eq(chatMessages.userId, userId),
+        eq(chatMessages.role, "user"),
+        gt(chatMessages.createdAt, oneHourAgo),
+      ),
+    );
+
+  if (recentMessageCount >= MESSAGES_PER_HOUR_LIMIT) {
+    return new Response("You've hit the hourly message limit. Please try again in a bit.", {
+      status: 429,
+    });
   }
 
   const parsed = bodySchema.safeParse(await req.json());

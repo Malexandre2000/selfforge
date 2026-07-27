@@ -1,0 +1,2 @@
+CREATE INDEX "chat_messages_user_id_created_at_idx" ON "chat_messages" USING btree ("user_id","created_at");--> statement-breakpoint
+CREATE INDEX "habits_user_id_idx" ON "habits" USING btree ("user_id");
