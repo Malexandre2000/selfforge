@@ -10,6 +10,7 @@ import {
   uuid,
   unique,
   index,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 import {
   GENDER_OPTIONS,
@@ -198,3 +199,19 @@ export const streakState = pgTable("streak_state", {
   longestStreak: integer("longest_streak").notNull().default(0),
   lastActiveDate: date("last_active_date"),
 });
+
+/**
+ * Fixed-window request counter for API rate limiting. One row per
+ * (key, window). Old windows are never read again after they close, so
+ * they're just left to accumulate — cheap enough at this scale, revisit
+ * with a periodic cleanup job if the table ever becomes a concern.
+ */
+export const apiRateLimits = pgTable(
+  "api_rate_limits",
+  {
+    key: text("key").notNull(),
+    windowStart: timestamp("window_start").notNull(),
+    count: integer("count").notNull().default(1),
+  },
+  (t) => [primaryKey({ columns: [t.key, t.windowStart] })],
+);

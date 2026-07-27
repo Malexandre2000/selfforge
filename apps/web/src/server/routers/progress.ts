@@ -59,10 +59,10 @@ export const progressRouter = router({
     .input(
       z
         .object({
-          weightKg: z.number().positive().optional(),
-          waistCm: z.number().positive().optional(),
-          chestCm: z.number().positive().optional(),
-          armsCm: z.number().positive().optional(),
+          weightKg: z.number().min(20).max(400).optional(),
+          waistCm: z.number().min(10).max(300).optional(),
+          chestCm: z.number().min(10).max(300).optional(),
+          armsCm: z.number().min(10).max(300).optional(),
         })
         .refine((v) => Object.values(v).some((x) => x !== undefined), {
           message: "Provide at least one measurement",
