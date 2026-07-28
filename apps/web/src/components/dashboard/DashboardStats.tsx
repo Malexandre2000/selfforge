@@ -55,7 +55,7 @@ export function DashboardStats() {
           <Timeline items={data.timeline} />
         </div>
         <div className="lg:col-span-2">
-          <BeforeAfterGallery />
+          <BeforeAfterGallery photos={data.photos} />
         </div>
       </div>
     </>

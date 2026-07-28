@@ -1,6 +1,6 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq, isNotNull } from "drizzle-orm";
 import { router, paidProcedure } from "../trpc";
-import { missionCompletions, onboardingProfiles } from "../db/schema";
+import { missionCompletions, onboardingProfiles, progressEntries } from "../db/schema";
 
 function todayUTC(): Date {
   const now = new Date();
@@ -91,6 +91,19 @@ export const dashboardRouter = router({
       else timeline.splice(insertIndex, 0, todayItem);
     }
 
+    const [beforeRow] = await ctx.db
+      .select({ pathname: progressEntries.beforePhotoUrl })
+      .from(progressEntries)
+      .where(and(eq(progressEntries.userId, ctx.userId), isNotNull(progressEntries.beforePhotoUrl)))
+      .orderBy(desc(progressEntries.date))
+      .limit(1);
+    const [afterRow] = await ctx.db
+      .select({ pathname: progressEntries.afterPhotoUrl })
+      .from(progressEntries)
+      .where(and(eq(progressEntries.userId, ctx.userId), isNotNull(progressEntries.afterPhotoUrl)))
+      .orderBy(desc(progressEntries.date))
+      .limit(1);
+
     return {
       needsOnboarding: false as const,
       streak,
@@ -98,6 +111,7 @@ export const dashboardRouter = router({
       confidence: profile.confidence,
       confidenceBaseline: profile.confidence,
       timeline,
+      photos: { before: beforeRow?.pathname ?? null, after: afterRow?.pathname ?? null },
     };
   }),
 });

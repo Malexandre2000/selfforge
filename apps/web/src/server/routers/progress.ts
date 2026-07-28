@@ -48,10 +48,16 @@ export const progressRouter = router({
       ];
     });
 
+    // Before/after are a single current pair, not per-day data — find the
+    // most recent row where each was set, which may not be the same row.
+    const beforePhotoUrl = [...rows].reverse().find((r) => r.beforePhotoUrl)?.beforePhotoUrl ?? null;
+    const afterPhotoUrl = [...rows].reverse().find((r) => r.afterPhotoUrl)?.afterPhotoUrl ?? null;
+
     return {
       weightHistory,
       measurements,
       latest: rows.length ? rows[rows.length - 1] : null,
+      photos: { before: beforePhotoUrl, after: afterPhotoUrl },
     };
   }),
 

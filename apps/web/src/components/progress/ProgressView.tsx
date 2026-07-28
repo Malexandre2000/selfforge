@@ -64,7 +64,7 @@ export function ProgressView() {
       )}
 
       <div className="mt-6">
-        <BeforeAfterPhotos />
+        <BeforeAfterPhotos photos={data?.photos ?? { before: null, after: null }} />
       </div>
     </div>
   );

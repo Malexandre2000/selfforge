@@ -93,7 +93,7 @@ export default function DashboardScreen() {
           </View>
 
           <View className="mt-6">
-            <BeforeAfterGallery />
+            <BeforeAfterGallery photos={data.photos} />
           </View>
         </>
       )}

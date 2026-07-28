@@ -66,7 +66,7 @@ export default function ProgressScreen() {
       </View>
 
       <View className="mt-6">
-        <BeforeAfterPhotos />
+        <BeforeAfterPhotos photos={data?.photos ?? { before: null, after: null }} />
       </View>
     </ScrollView>
   );
