@@ -4,6 +4,10 @@ node_modules/
 # turborepo
 .turbo/
 
+# build outputs
+.next/
+out/
+
 # env files
 .env
 .env.local
