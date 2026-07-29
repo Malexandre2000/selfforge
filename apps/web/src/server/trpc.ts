@@ -1,7 +1,9 @@
 import { initTRPC, TRPCError } from "@trpc/server";
+import { clerkClient } from "@clerk/nextjs/server";
 import { users } from "./db/schema";
 import { hasActiveAccess } from "./billing/access";
 import { checkRateLimit } from "./security/rateLimit";
+import { isAdminEmail } from "./beta/access";
 import type { Context } from "./context";
 
 const t = initTRPC.context<Context>().create();
@@ -39,6 +41,19 @@ export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
 export const paidProcedure = protectedProcedure.use(async ({ ctx, next }) => {
   if (!(await hasActiveAccess(ctx.db, ctx.userId))) {
     throw new TRPCError({ code: "FORBIDDEN", message: "Subscribe to unlock this." });
+  }
+
+  return next({ ctx });
+});
+
+/** Gates the beta admin dashboard — allowlisted by email via ADMIN_EMAILS. */
+export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  const client = await clerkClient();
+  const user = await client.users.getUser(ctx.userId);
+  const email = user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId)?.emailAddress;
+
+  if (!isAdminEmail(email)) {
+    throw new TRPCError({ code: "FORBIDDEN" });
   }
 
   return next({ ctx });

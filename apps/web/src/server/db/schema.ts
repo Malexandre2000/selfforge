@@ -215,3 +215,83 @@ export const apiRateLimits = pgTable(
   },
   (t) => [primaryKey({ columns: [t.key, t.windowStart] })],
 );
+
+export const waitlistStatusEnum = pgEnum("waitlist_status", ["waiting", "invited", "joined"]);
+
+/**
+ * One row per waitlist signup. `referralCode` is this person's own
+ * shareable code; `referredByCode` is whose code brought them here — both
+ * live on the same table since referral is just waitlist attribution, not
+ * a separate rewards system. `inviteCode` is set when an admin invites
+ * them and is what gates actual product access (see billing/access.ts).
+ */
+export const waitlistEntries = pgTable(
+  "waitlist_entries",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    email: text("email").notNull(),
+    name: text("name"),
+    referralCode: text("referral_code").notNull(),
+    referredByCode: text("referred_by_code"),
+    status: waitlistStatusEnum("status").notNull().default("waiting"),
+    inviteCode: text("invite_code"),
+    joinedUserId: text("joined_user_id").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    invitedAt: timestamp("invited_at"),
+    joinedAt: timestamp("joined_at"),
+  },
+  (t) => [unique().on(t.email), unique().on(t.referralCode), unique().on(t.inviteCode)],
+);
+
+export const feedbackTypeEnum = pgEnum("feedback_type", ["feedback", "bug"]);
+export const feedbackStatusEnum = pgEnum("feedback_status", ["new", "reviewed", "resolved"]);
+
+export const feedbackEntries = pgTable(
+  "feedback_entries",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: feedbackTypeEnum("type").notNull(),
+    message: text("message").notNull(),
+    pageUrl: text("page_url"),
+    screenshotUrl: text("screenshot_url"),
+    status: feedbackStatusEnum("status").notNull().default("new"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [index("feedback_entries_user_id_idx").on(t.userId)],
+);
+
+export const featureRequestStatusEnum = pgEnum("feature_request_status", [
+  "open",
+  "planned",
+  "shipped",
+  "declined",
+]);
+
+export const featureRequests = pgTable("feature_requests", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  status: featureRequestStatusEnum("status").notNull().default("open"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const featureRequestVotes = pgTable(
+  "feature_request_votes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    featureRequestId: uuid("feature_request_id")
+      .notNull()
+      .references(() => featureRequests.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [unique().on(t.featureRequestId, t.userId)],
+);

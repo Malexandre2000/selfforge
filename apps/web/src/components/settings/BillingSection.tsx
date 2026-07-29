@@ -34,6 +34,10 @@ export function BillingSection() {
         <div className="mt-3">
           <QueryError message="Couldn't load your billing status." onRetry={() => refetch()} />
         </div>
+      ) : data?.status === "none" && data.isBeta ? (
+        <p className="mt-2 text-sm text-ink-500">
+          Free beta access — full access, no card needed while the beta runs.
+        </p>
       ) : data?.status === "none" ? (
         <>
           <p className="mt-2 text-sm text-ink-500">You don&apos;t have an active subscription.</p>

@@ -14,6 +14,7 @@ import {
   Settings,
   Menu,
   X,
+  Map,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -23,6 +24,7 @@ const navItems: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/progress", label: "Progress", icon: TrendingUp },
   { href: "/habits", label: "Habits", icon: ListChecks },
   { href: "/missions", label: "Daily Missions", icon: Target },
+  { href: "/roadmap", label: "Roadmap", icon: Map },
   { href: "/profile", label: "Profile", icon: User },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

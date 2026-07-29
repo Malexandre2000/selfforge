@@ -1,5 +1,6 @@
 import { AppSidebar } from "@/components/app/AppSidebar";
 import { OnboardingSync } from "@/components/app/OnboardingSync";
+import { FeedbackWidget } from "@/components/feedback/FeedbackWidget";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -7,6 +8,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <OnboardingSync />
       <AppSidebar />
       <main className="flex-1 bg-ink-50">{children}</main>
+      <FeedbackWidget />
     </div>
   );
 }
